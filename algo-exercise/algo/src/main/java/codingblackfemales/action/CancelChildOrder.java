@@ -11,14 +11,18 @@ import java.nio.ByteBuffer;
 public class CancelChildOrder implements Action{
 
     private final ChildOrder orderToCancel;
-
+    private final long orderId; 
+    
+    public CancelChildOrder(long orderId) {
+        this.orderId = orderId;
+    }
     public CancelChildOrder(ChildOrder orderToCancel) {
-        this.orderToCancel = orderToCancel;
+        this.orderId = orderToCancel.getOrderId();
     }
 
     @Override
     public String toString() {
-        return "CancelChildOrder(" + orderToCancel + ")";
+        return "CancelChildOrder{id=" + orderToCancel + "}";
     }
 
     @Override
@@ -36,5 +40,30 @@ public class CancelChildOrder implements Action{
         encoder.orderId(orderToCancel.getOrderId());
 
         sequencer.onCommand(directBuffer);
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(CancelChildOrder.class);
+
+    @Override
+    public void execute(SimpleAlgoState state) {
+        List<ChildOrder> childOrders = state.getChildOrders();
+
+        if (childOrders.isEmpty()) {
+            logger.info("[CancelAllChildOrders] No child orders to cancel.");
+            return;
+        }
+
+        // Loop through each child order and cancel it
+        for (ChildOrder childOrder : childOrders) {
+            logger.info("[CancelAllChildOrders] Canceling child order: ID=" + childOrder.getOrderId() + ", Quantity=" + childOrder.getQuantity() + ", Price=" + childOrder.getPrice());
+            
+            // Create a CancelChildOrder action for each child order
+            CancelChildOrder cancelAction = new CancelChildOrder(childOrder);
+            
+            // Apply the cancel action to the sequencer
+            cancelAction.apply(state.getSequencer());
+        }
+
+        logger.info("[CancelAllChildOrders] All child orders have been processed for cancellation.");
     }
 }

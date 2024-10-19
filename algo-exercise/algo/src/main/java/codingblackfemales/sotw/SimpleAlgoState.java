@@ -16,6 +16,8 @@ public interface SimpleAlgoState {
     public AskLevel getAskAt(int index);
 
     public List<ChildOrder> getChildOrders();
+    ChildOrder getChildOrderById(long orderId);
+
 
     public List<ChildOrder> getActiveChildOrders();
 

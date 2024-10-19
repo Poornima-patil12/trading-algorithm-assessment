@@ -15,6 +15,11 @@ public class ChildOrder {
     private int state;
 
     private List<ChildFill> fills = new LinkedList<>();
+    /*
+     * public static final int OPEN = 0;
+     * public static final int PARTIALLY_FILLED = 1;
+     * public static final int FILLED = 2;
+     */
 
     public ChildOrder(Side side, long orderId, long quantity, long price, int state) {
         this.side = side;
@@ -41,7 +46,7 @@ public class ChildOrder {
     }
 
     public long getFilledQuantity() {
-        return fills.stream().map( cf -> cf.getQuantity()).collect(Collectors.summingLong(Long::longValue));
+        return fills.stream().map(cf -> cf.getQuantity()).collect(Collectors.summingLong(Long::longValue));
     }
 
     public int getState() {
