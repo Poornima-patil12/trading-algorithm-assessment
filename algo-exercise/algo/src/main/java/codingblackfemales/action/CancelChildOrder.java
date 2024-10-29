@@ -2,22 +2,30 @@ package codingblackfemales.action;
 
 import codingblackfemales.sequencer.Sequencer;
 import codingblackfemales.sotw.ChildOrder;
+import codingblackfemales.sotw.SimpleAlgoState;
 import messages.order.CancelOrderEncoder;
 import messages.order.MessageHeaderEncoder;
 import org.agrona.concurrent.UnsafeBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 public class CancelChildOrder implements Action{
 
     private final ChildOrder orderToCancel;
-    private final long orderId; 
+//    private final long orderId;
     
-    public CancelChildOrder(long orderId) {
-        this.orderId = orderId;
-    }
+//    public CancelChildOrder(long orderId) {
+//        this.orderId = orderId;
+//    }
+//    public CancelChildOrder(ChildOrder orderToCancel) {
+//        this.orderId = orderToCancel.getOrderId();
+//    }
+
     public CancelChildOrder(ChildOrder orderToCancel) {
-        this.orderId = orderToCancel.getOrderId();
+        this.orderToCancel = orderToCancel;
     }
 
     @Override
@@ -42,28 +50,26 @@ public class CancelChildOrder implements Action{
         sequencer.onCommand(directBuffer);
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(CancelChildOrder.class);
+// private static final Logger logger = LoggerFactory.getLogger(CancelChildOrder.class);
 
-    @Override
-    public void execute(SimpleAlgoState state) {
-        List<ChildOrder> childOrders = state.getChildOrders();
 
-        if (childOrders.isEmpty()) {
-            logger.info("[CancelAllChildOrders] No child orders to cancel.");
-            return;
-        }
-
-        // Loop through each child order and cancel it
-        for (ChildOrder childOrder : childOrders) {
-            logger.info("[CancelAllChildOrders] Canceling child order: ID=" + childOrder.getOrderId() + ", Quantity=" + childOrder.getQuantity() + ", Price=" + childOrder.getPrice());
-            
-            // Create a CancelChildOrder action for each child order
-            CancelChildOrder cancelAction = new CancelChildOrder(childOrder);
-            
-            // Apply the cancel action to the sequencer
-            cancelAction.apply(state.getSequencer());
-        }
-
-        logger.info("[CancelAllChildOrders] All child orders have been processed for cancellation.");
-    }
+// public void execute(SimpleAlgoState state) {
+//    List<ChildOrder> childOrders = state.getChildOrders();
+//    if (childOrders.isEmpty()) {
+//         logger.info("[CancelAllChildOrders] No child orders to cancel.");
+//        return;
+//    }
+//
+////     // Loop through each child order and cancel it
+//     for (ChildOrder childOrder : childOrders) {
+//          logger.info("[CancelAllChildOrders] Canceling child order: ID=" + childOrder.getOrderId() + ", Quantity=" + childOrder.getQuantity() + ", Price=" + childOrder.getPrice());
+//
+//           // Create a CancelChildOrder action for each child order
+//         CancelChildOrder cancelAction = new CancelChildOrder(childOrder);
+//
+//          // Apply the cancel action to the sequencer
+//      cancelAction.apply(state.getSequencer());
+//      }
+//     logger.info("[CancelAllChildOrders] All child orders have been processed for cancellation.");
+//  }cancellation
 }

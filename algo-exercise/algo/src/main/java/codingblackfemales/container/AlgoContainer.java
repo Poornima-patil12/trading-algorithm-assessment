@@ -56,6 +56,7 @@ public class AlgoContainer implements Consumer {
     private void runAlgoLogic() {
         final var action = logic.evaluate(state);
 
+
         runTrigger.hasRun();
 
         if (action != null && (!action.equals(NoAction.NoAction))) {

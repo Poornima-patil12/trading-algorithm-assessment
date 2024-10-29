@@ -28,67 +28,64 @@ public class MyAlgoLogic implements AlgoLogic {
 
     @Override
     public Action evaluate(SimpleAlgoState state) {
-        final Action action;
         logger.info("[MYALGO] In Algo Logic....");
 
         var orderBookAsString = Util.orderBookToString(state);
-
         logger.info("[MYALGO] The state of the order book is:\n" + orderBookAsString);
 
-        final BidLevel nearTouch = state.getBidAt(0);
-        long quantity = nearTouch.quantity;
-        long price = nearTouch.price;
+        final BidLevel nearTouch = state.getBidAt(0); // top bid
+        long bidQuantity = nearTouch.quantity;
+        long bidPrice = nearTouch.price;
 
+        // Get the top ask level (best price on the offer side)
+        final AskLevel offerTouch = state.getAskAt(0); // top ask
+        long offerQuantity = offerTouch.quantity;
+        long offerPrice = offerTouch.price;
+
+        // Manually creating and canceling child orders
         if (state.getChildOrders().size() < 3) {
-
-            logger.info("[MyALGO] Have:" + state.getChildOrders().size()
-                    + " children, want 3, joining my side of book with: " + quantity + " @ " + price);
-            return action = new CreateChildOrder(Side.BUY, quantity, price);
-
+            logger.info("[MYALGO] Have:" + state.getChildOrders().size()
+                    + " children, need 3. Creating BUY child order with quantity: " + bidQuantity + " @ " + bidPrice);
+            // Create new BUY child order
+            return new CreateChildOrder(Side.BUY, bidQuantity, bidPrice);
         } else {
-            logger.info("[MyALGO] Have:" + state.getChildOrders().size() + " children, want 4, done.");
-            action = NoAction.NoAction;
+            logger.info("[MYALGO] Have 3 or more child orders. No need to create more.");
         }
-        return action;
-        // cancelling child order
 
-        /*
-         * final var activeOrders = state.getChildOrders();
-         * 
-         * if (activeOrders.size() > 4) {
-         * 
-         * final var option = activeOrders.stream().findFirst();
-         * 
-         * if (option.isPresent()) {
-         * var childOrder = option.get();
-         * logger.info("[ADDCANCELALGO] Cancelling order:" + childOrder);
-         * return new CancelChildOrder(childOrder);
-         * } else {
-         * return NoAction.NoAction;
-         * }
-         * }
-         * 
-         * return action;
-         * }
-         * 
-         * // checking filled quantity
-         * public void manageFilledOrders(SimpleAlgoState state) {
-         * for (ChildOrder order : state.getChildOrders()) {
-         * long filledQuantity = order.getFilledQuantity();
-         * 
-         * if (filledQuantity == 225) {
-         * order.setState(2); // Set the state to filled
-         * logger.info("Order " + order.getOrderId() +
-         * " is fully filled with quantity: " + filledQuantity);
-         * } else if (filledQuantity > 0 && filledQuantity < order.getQuantity()) {
-         * order.setState(1); // Set the state to partially filled
-         * logger.info("Order " + order.getOrderId() +
-         * " is partially filled with quantity: " + filledQuantity);
-         * } else {
-         * order.setState(0); // Set the state to open
-         * logger.info("Order " + order.getOrderId() + " is still open.");
-         * }
-         * }
-         */
+        // Check if bidPrice is below the threshold (90) and manually cancel child orders
+        if (shouldCancelOrders(bidPrice)) {
+            logger.info("[MYALGO] Bid price is below 90, checking for child orders to cancel...");
+            return cancelChildOrders(bidPrice);  // Prioritize canceling child orders
+        }
+
+        // If no action required, return NoAction
+        logger.info("[MYALGO] No action required.");
+        return NoAction.NoAction;
+    }
+
+    // Method to manually cancel child orders
+    public Action cancelChildOrders(long bidPrice) {
+        logger.info("[MYALGO] Manually canceling child orders...");
+
+        // Loop through each child order and cancel based on criteria
+        for (var childOrder : state.getActiveChildOrders()) {
+            if (shouldCancelOrder(childOrder, bidPrice)) {
+                logger.info("[MYALGO] Canceling child order with price: " + childOrder.getPrice());
+                return new CancelChildOrder(childOrder); // Cancel each matching child order
+            }
+        }
+
+        logger.info("[MYALGO] No child orders were canceled.");
+        return NoAction.NoAction;  // Return NoAction if no cancellations were made
+    }
+
+    // Helper method to decide whether to cancel a specific child order
+    private boolean shouldCancelOrder(ChildOrder order, long bidPrice) {
+        return bidPrice < 90 && order.getPrice() > bidPrice;  // Cancel if bid price is below 90
+    }
+
+    // Helper method to check if the overall order cancellation condition is met
+    private boolean shouldCancelOrders(long bidPrice) {
+        return bidPrice < 90;
     }
 }

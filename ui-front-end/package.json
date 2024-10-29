@@ -19,6 +19,7 @@
     "@vuu-ui/vuu-table": "0.8.81",
     "@vuu-ui/vuu-theme": "0.8.81",
     "@vuu-ui/vuu-utils": "0.8.81",
+    "algo-prices": "file:",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

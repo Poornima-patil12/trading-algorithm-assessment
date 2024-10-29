@@ -28,20 +28,39 @@ public class MyAlgoTest extends AbstractAlgoTest {
         // this adds your algo logic to the container classes
         return new MyAlgoLogic();
     }
-
+    
     @Test
     public void testDispatchThroughSequencer() throws Exception {
 
-        // create a sample market data tick....
         send(createTick());
+        System.out.println("Child orders after createTick: " + container.getState().getChildOrders().size());
+    System.out.println("Active child orders after createTick: " + container.getState().getActiveChildOrders().size());
 
-        // simple assert to check we had 3 orders created
-        assertEquals(container.getState().getChildOrders().size(), 3);
 
+        assertEquals(3, container.getState().getActiveChildOrders().size());
         send(createTick2());
+        System.out.println("Child orders after createTick2: " + container.getState().getChildOrders().size());
+        System.out.println("Active child orders after createTick2: " + container.getState().getActiveChildOrders().size());
 
-        assertEquals(container.getState().getActiveChildOrders().size(), 3);
 
+        assertEquals(3, container.getState().getActiveChildOrders().size());
+    }
+    @Test
+    public void testCancelChildOrders() throws Exception {
+        // Step 1: Simulate creating 3 child orders with a market data tick
+       // send(createTick());
+
+        // Step 2: Verify that 3 child orders have been created
+      //assertEquals(container.getState().getChildOrders().size(),3);
+
+        // Step 3: Simulate a market tick where the bid price is below 90
+        send(createCancelTriggerTick());
+
+        System.out.println("Child orders after createCancelTriggerTick: " + container.getState().getChildOrders().size());
+        System.out.println("Active child orders after createCancelTriggerTick: " + container.getState().getActiveChildOrders().size());
+
+        // Step 4: Check that no child orders remain active after cancellation
+        assertEquals(0,container.getState().getActiveChildOrders().size());
     }
 
 }

@@ -1,5 +1,6 @@
 package codingblackfemales.sotw;
 
+import codingblackfemales.sequencer.Sequencer;
 import codingblackfemales.sotw.marketdata.AskLevel;
 import codingblackfemales.sotw.marketdata.BidLevel;
 
@@ -16,10 +17,12 @@ public interface SimpleAlgoState {
     public AskLevel getAskAt(int index);
 
     public List<ChildOrder> getChildOrders();
-    ChildOrder getChildOrderById(long orderId);
+//    ChildOrder getChildOrderById(long orderId);
 
 
     public List<ChildOrder> getActiveChildOrders();
 
     public long getInstrumentId();
+
+//    Sequencer getSequencer();
 }
