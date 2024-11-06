@@ -53,6 +53,10 @@ public class ChildOrder {
         return state;
     }
 
+    public long getUnfilledQuantity() {
+        return quantity - getFilledQuantity();
+    }
+
     public void setState(int state) {
         this.state = state;
     }

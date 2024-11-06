@@ -2,6 +2,7 @@ package codingblackfemales.gettingstarted;
 
 import static org.junit.Assert.assertEquals;
 
+import codingblackfemales.action.CancelChildOrder;
 import codingblackfemales.algo.AlgoLogic;
 import codingblackfemales.sotw.ChildOrder;
 
@@ -34,30 +35,36 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
     @Test
     public void testExampleBackTest() throws Exception {
         // create a sample market data tick....
-        send(createTick());
+        send(createTick2());
 
         // ADD asserts when you have implemented your algo logic
         assertEquals(container.getState().getChildOrders().size(), 3);
 
-        // when: market data moves towards us
-        // send(createTick2());
-        // send(createTickmore3());
-        // then: get the state
-        // var state = container.getState();
+        send(createTick2());
+        send(createTickMore());
 
-        // Check things like filled quantity, cancelled order count etc....
-        // long filledQuantity =
-        // state.getChildOrders().stream().map(ChildOrder::getFilledQuantity).reduce(Long::sum)
-        // .get();
+        // Step 3: Retrieve the current state and calculate filled quantity
+        var state = container.getState();
+        long filledQuantity = state.getChildOrders()
+                .stream()
+                .mapToLong(ChildOrder::getFilledQuantity)
+                .sum();
+        assertEquals("Expected total filled quantity of 700", 700, filledQuantity);
 
-        // state.getChildOrders().stream().map(ChildOrder::getFilledQuantity).reduce(Long::sum).get();
-        // and: check that our algo state was updated to reflect our fills when the
-        // market data
-        // assertEquals(225, filledQuantity);
+        // Step 4: Cancel unfilled orders
+        state.getChildOrders().forEach(order -> {
+            if (order.getUnfilledQuantity() > 0) {
+                new CancelChildOrder(order);
+            }
+        });
 
-        // send(createTickmore());
+        // Step 5: Send another tick to confirm cancellations and state
+        send(createTickMore());
 
-        // assertEquals(container.getState().getActiveChildOrders().size(), 4);
+        // Assert that the active child orders count is as expected after cancellations
+        assertEquals("Expected 3 active child orders after canceling unfilled orders", 3,
+                container.getState().getActiveChildOrders().size());
+
     }
 
 }
