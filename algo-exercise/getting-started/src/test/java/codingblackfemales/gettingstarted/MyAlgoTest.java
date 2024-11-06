@@ -31,28 +31,26 @@ public class MyAlgoTest extends AbstractAlgoTest {
     
     @Test
     public void testDispatchThroughSequencer() throws Exception {
+       
+       // send(createTickForMovingAverage());
+        //assertEquals(3, container.getState().getActiveChildOrders().size());
 
         send(createTick());
         System.out.println("Child orders after createTick: " + container.getState().getChildOrders().size());
-    System.out.println("Active child orders after createTick: " + container.getState().getActiveChildOrders().size());
-
-
+        System.out.println("Active child orders after createTick: " + container.getState().getActiveChildOrders().size());
         assertEquals(3, container.getState().getActiveChildOrders().size());
+
         send(createTick2());
         System.out.println("Child orders after createTick2: " + container.getState().getChildOrders().size());
         System.out.println("Active child orders after createTick2: " + container.getState().getActiveChildOrders().size());
 
 
         assertEquals(3, container.getState().getActiveChildOrders().size());
+
     }
     @Test
     public void testCancelChildOrders() throws Exception {
-        // Step 1: Simulate creating 3 child orders with a market data tick
-       // send(createTick());
-
-        // Step 2: Verify that 3 child orders have been created
-      //assertEquals(container.getState().getChildOrders().size(),3);
-
+       
         // Step 3: Simulate a market tick where the bid price is below 90
         send(createCancelTriggerTick());
 
@@ -63,4 +61,5 @@ public class MyAlgoTest extends AbstractAlgoTest {
         assertEquals(0,container.getState().getActiveChildOrders().size());
     }
 
+       
 }

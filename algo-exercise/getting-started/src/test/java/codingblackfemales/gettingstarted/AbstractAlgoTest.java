@@ -140,4 +140,36 @@ return directBuffer;
             
                 return directBuffer;
             }
+            protected UnsafeBuffer createTickForMovingAverage() {
+                final MessageHeaderEncoder headerEncoder = new MessageHeaderEncoder();
+                final BookUpdateEncoder encoder = new BookUpdateEncoder();
+            
+                final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(1024);
+                final UnsafeBuffer directBuffer = new UnsafeBuffer(byteBuffer);
+            
+                // Wrap the encoder with the direct buffer
+                encoder.wrapAndApplyHeader(directBuffer, 0, headerEncoder);
+            
+                // Set the venue and instrument ID
+                encoder.venue(Venue.XLON);
+                encoder.instrumentId(123L);
+            
+                // Set up ask book with a rising trend in prices (simulates a bullish crossover condition)
+                encoder.askBookCount(3)
+                    .next().price(102L).size(150L)   // Increased ask price and volume
+                    .next().price(105L).size(300L)
+                    .next().price(108L).size(600L);
+            
+                // Set up bid book with corresponding prices to support a bullish signal
+                encoder.bidBookCount(3)
+                    .next().price(101L).size(150L)
+                    .next().price(104L).size(300L)
+                    .next().price(107L).size(600L);
+            
+                // Set instrument status and data source
+                encoder.instrumentStatus(InstrumentStatus.CONTINUOUS);
+                encoder.source(Source.STREAM);
+            
+                return directBuffer;
+            }
         }

@@ -14,9 +14,9 @@ import codingblackfemales.sotw.marketdata.BidLevel;
 import codingblackfemales.util.Util;
 import messages.order.Side;
 import codingblackfemales.algo.AddCancelAlgoLogic;
-
+import java.util.LinkedList;
 import java.util.List;
-
+import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +25,12 @@ public class MyAlgoLogic implements AlgoLogic {
     private static final Logger logger = LoggerFactory.getLogger(MyAlgoLogic.class);
     private static final long BUY_THRESHOLD = 90L;
     private static final long SELL_THRESHOLD = 110L;
+    
+    private static final long SPREAD_COMPRESSION_THRESHOLD = 5L;
+    private static final int MA_PERIOD = 10; // Short-term moving average period
+
+    // To track recent bid prices for moving average calculation
+    private final Queue<Long> recentBidPrices = new LinkedList<>();
 
     @Override
     public Action evaluate(SimpleAlgoState state) {
@@ -39,29 +45,36 @@ public class MyAlgoLogic implements AlgoLogic {
         long askPrice = topAsk.price;
         long askQuantity = topAsk.quantity;
 
+        // Track recent bid prices for moving average
+        if (recentBidPrices.size() >= MA_PERIOD) {
+            recentBidPrices.poll(); // Remove oldest price
+        }
+        recentBidPrices.add(bidPrice);
+
+        // Calculate moving average of bid prices
+        long movingAverage = recentBidPrices.stream().mapToLong(Long::longValue).sum() / recentBidPrices.size();
+
         // Check current count of active BUY and SELL orders
         long buyOrderCount = state.getChildOrders().stream().filter(order -> order.getSide() == Side.BUY).count();
 
-        // Buy condition: Place BUY order if bid price meets threshold and count is below limit
-        if (bidPrice >= BUY_THRESHOLD && buyOrderCount < 3) {
+        // Buy condition 1: Moving average strategy
+        if (bidPrice > movingAverage && buyOrderCount < 3) {
+            logger.info("[BuySellAlgo] Moving average strategy: Placing BUY order - Bid Price: " + bidPrice + ", Quantity: " + bidQuantity);
+            return new CreateChildOrder(Side.BUY, bidQuantity, bidPrice);
+        }
 
-            final long spread = Math.abs(askPrice - bidPrice); // added 5/10/2024 to get absolute value of a number
-            final long spreadThreshold = 5L;
+       // Buy condition 3: Breakout strategy
+        long recentHigh = recentBidPrices.stream().mapToLong(Long::longValue).max().orElse(bidPrice);
+        if (bidPrice > recentHigh && buyOrderCount < 3) {
+            logger.info("[BuySellAlgo] Breakout strategy: Placing BUY order - Bid Price: " + bidPrice + ", Quantity: " + bidQuantity);
+            return new CreateChildOrder(Side.BUY, bidQuantity, bidPrice);
+        }
 
-            // Define the buy quantity
-            bidQuantity = 200L;
-            if (spread <= spreadThreshold) {
-
-                logger.info("[MYALGO] BUY CONDITIONS - Best Bid Qty " + bidQuantity + " units, " + "BestBid " + bidPrice);
-                logger.info("[MYALGO] BUY CONDITIONS - Best Ask Qty " + askQuantity + " units, " + "BestAsk " + askPrice);
-                logger.info("[BuySellAlgo] Placing BUY order - Bid Price: " + bidPrice + ", Quantity: " + bidQuantity);
-                return new CreateChildOrder(Side.BUY, bidQuantity, bidPrice);
-            }
-            else {
-                // Log if the spread does not meet the threshold
-                logger.info("[MYALGO] BUY CONDITIONS - Spread is " + spread + " points.");
-                logger.info("[MYALGO] BUY CONDITIONS - Spread is above the buying threshold. No buy order created.");
-            }
+        // Buy condition 4: Spread compression
+        long spread = Math.abs(askPrice - bidPrice);
+        if (spread <= SPREAD_COMPRESSION_THRESHOLD && buyOrderCount < 3) {
+            logger.info("[BuySellAlgo] Spread compression: Placing BUY order - Bid Price: " + bidPrice + ", Quantity: " + bidQuantity);
+            return new CreateChildOrder(Side.BUY, bidQuantity, bidPrice);
         }
 
 
@@ -90,6 +103,4 @@ public class MyAlgoLogic implements AlgoLogic {
         }
         return NoAction.NoAction;
     }
-
-
 }
